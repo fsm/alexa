@@ -1,6 +1,6 @@
-# FSM Alexa
+# Alexa
 
-FSM Alexa is an Amazon Alexa target for [fsm](https://github.com/fsm/fsm).
+Alexa is an Amazon Alexa target for [fsm](https://github.com/fsm/fsm).
 
 # License
 
