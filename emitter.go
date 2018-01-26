@@ -12,7 +12,7 @@ import (
 	"github.com/fsm/emitable"
 )
 
-// AlexaEmitter is an implementation of an FSM emitter for Amazon Alexa
+// emitter is an implementation of an FSM emitter for Amazon Alexa
 //
 // Because Amazon Alexa expects all outgoing messages / data to be in the form
 // of a response to the inbound request (as compared to pushing messages), there
@@ -23,34 +23,34 @@ import (
 // expected Alexa response, and written to the ResponseWriter.
 //
 // https://developer.amazon.com/docs/custom-skills/speech-synthesis-markup-language-ssml-reference.html#ssml-supported
-type AlexaEmitter struct {
+type emitter struct {
 	ResponseWriter io.Writer
 	hasSpeech      bool
 	speechBuffer   bytes.Buffer
 }
 
 // Emit prepares the data to be output at the end of the request.
-func (a *AlexaEmitter) Emit(input interface{}) error {
+func (e *emitter) Emit(input interface{}) error {
 	switch v := input.(type) {
 
 	case string:
-		a.speechBuffer.WriteString("<s>")
-		a.speechBuffer.WriteString(v)
-		a.speechBuffer.WriteString("</s>")
-		a.hasSpeech = true
+		e.speechBuffer.WriteString("<s>")
+		e.speechBuffer.WriteString(v)
+		e.speechBuffer.WriteString("</s>")
+		e.hasSpeech = true
 		return nil
 
 	case emitable.Sleep:
-		a.speechBuffer.WriteString("<break time=\"")
-		a.speechBuffer.WriteString(strconv.Itoa(v.LengthMillis))
-		a.speechBuffer.WriteString("ms\"/>")
+		e.speechBuffer.WriteString("<break time=\"")
+		e.speechBuffer.WriteString(strconv.Itoa(v.LengthMillis))
+		e.speechBuffer.WriteString("ms\"/>")
 		return nil
 
 	case emitable.QuickReply:
 		// Write message
-		a.speechBuffer.WriteString("<p>")
-		a.speechBuffer.WriteString(v.Message)
-		a.speechBuffer.WriteString("</p>")
+		e.speechBuffer.WriteString("<p>")
+		e.speechBuffer.WriteString(v.Message)
+		e.speechBuffer.WriteString("</p>")
 
 		// Options
 		optionsBuffer := new(bytes.Buffer)
@@ -74,9 +74,9 @@ func (a *AlexaEmitter) Emit(input interface{}) error {
 		}
 
 		// Write out options
-		a.speechBuffer.WriteString("<p>")
-		a.speechBuffer.WriteString(fmt.Sprintf(format, optionsBuffer.String()))
-		a.speechBuffer.WriteString("</p>")
+		e.speechBuffer.WriteString("<p>")
+		e.speechBuffer.WriteString(fmt.Sprintf(format, optionsBuffer.String()))
+		e.speechBuffer.WriteString("</p>")
 		return nil
 
 	case emitable.Typing:
@@ -103,19 +103,19 @@ func (a *AlexaEmitter) Emit(input interface{}) error {
 }
 
 // Flush writes the expected Alexa response to the a.ResponseWriter.
-func (a *AlexaEmitter) Flush() error {
+func (e *emitter) Flush() error {
 	// Prepare response body
-	response := &ResponseBody{
+	response := &responseBody{
 		Version: "1.0",
-		Response: &Response{
+		Response: &response{
 			ShouldEndSession: true,
 		},
 	}
 
 	// Handle speech
-	if a.hasSpeech {
-		ssml := "<speak>" + a.speechBuffer.String() + "</speak>"
-		response.Response.OutputSpeech = &OutputSpeech{
+	if e.hasSpeech {
+		ssml := "<speak>" + e.speechBuffer.String() + "</speak>"
+		response.Response.OutputSpeech = &outputSpeech{
 			Type: "SSML",
 			SSML: ssml,
 		}
@@ -126,6 +126,6 @@ func (a *AlexaEmitter) Flush() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprint(a.ResponseWriter, string(b))
+	fmt.Fprint(e.ResponseWriter, string(b))
 	return nil
 }

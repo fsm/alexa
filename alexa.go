@@ -22,7 +22,7 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 		body := buf.String()
 
 		// Parse body into struct
-		cb := &RequestBody{}
+		cb := &requestBody{}
 		err := json.Unmarshal([]byte(body), cb)
 		if err != nil {
 			fmt.Println(err)
@@ -40,7 +40,7 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 		}
 
 		// Create emitter
-		emitter := &AlexaEmitter{
+		emitter := &emitter{
 			ResponseWriter: w,
 		}
 
