@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/fsm/target-util"
+
 	"github.com/fsm/fsm"
 )
 
@@ -30,33 +32,13 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 			return
 		}
 
-		// Get traverser
-		newTraverser := false
-		traverser, err := store.FetchTraverser(cb.Session.User.UserID)
-		if err != nil {
-			traverser, _ = store.CreateTraverser(cb.Session.User.UserID)
-			traverser.SetCurrentState("start")
-			newTraverser = true
-		}
-
-		// Create emitter
+		// Perform a Step
+		input := distillIntent(cb.Request.Intent)
+		stateMap := targetutil.GetStateMap(stateMachine)
 		emitter := &emitter{
 			ResponseWriter: w,
 		}
-
-		// Get current state
-		currentState := stateMachine[traverser.CurrentState()](emitter, traverser)
-		if newTraverser {
-			currentState.EntryAction()
-		}
-
-		// Transition
-		distilledValue := distillIntent(cb.Request.Intent)
-		newState := currentState.Transition(distilledValue)
-		err = newState.EntryAction()
-		if err == nil {
-			traverser.SetCurrentState(newState.Slug)
-		}
+		targetutil.Step(cb.Session.User.UserID, input, store, emitter, stateMap)
 
 		// Write body
 		err = emitter.Flush()
