@@ -11,6 +11,8 @@ import (
 	"github.com/fsm/fsm"
 )
 
+const platform = "amazon-alexa"
+
 // DistillIntent is a function that is responsible for converting
 // an intent into an input string
 type DistillIntent func(Intent) string
@@ -38,7 +40,7 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 		emitter := &emitter{
 			ResponseWriter: w,
 		}
-		targetutil.Step(cb.Session.User.UserID, input, store, emitter, stateMap)
+		targetutil.Step(platform, cb.Session.User.UserID, input, store, emitter, stateMap)
 
 		// Write body
 		err = emitter.Flush()
