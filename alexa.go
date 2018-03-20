@@ -19,6 +19,10 @@ type DistillIntent func(Intent) string
 
 // GetWebhook returns the webhook that Alexa expects to communicate with
 func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent DistillIntent) func(http.ResponseWriter, *http.Request) {
+	// Get StateMap
+	stateMap := targetutil.GetStateMap(stateMachine)
+
+	// Return Handler
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get body
 		buf := new(bytes.Buffer)
@@ -34,12 +38,26 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 			return
 		}
 
-		// Perform a Step
-		input := distillIntent(cb.Request.Intent)
-		stateMap := targetutil.GetStateMap(stateMachine)
+		// Prepare the emitter
 		emitter := &emitter{
 			ResponseWriter: w,
 		}
+
+		// Handle request type
+		var input string
+		switch cb.Request.Type {
+		case RequestTypeLaunch:
+			input = RequestTypeLaunch
+			break
+		case RequestTypeIntent:
+			input = distillIntent(cb.Request.Intent)
+			break
+		case RequestTypeSessionEnded:
+			emitter.Flush()
+			return
+		}
+
+		// Perform a Step
 		targetutil.Step(platform, cb.Session.User.UserID, input, store, emitter, stateMap)
 
 		// Write body

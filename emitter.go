@@ -24,9 +24,10 @@ import (
 //
 // https://developer.amazon.com/docs/custom-skills/speech-synthesis-markup-language-ssml-reference.html#ssml-supported
 type emitter struct {
-	ResponseWriter io.Writer
-	hasSpeech      bool
-	speechBuffer   bytes.Buffer
+	ResponseWriter   io.Writer
+	hasSpeech        bool
+	speechBuffer     bytes.Buffer
+	shouldEndSession bool
 }
 
 // Emit prepares the data to be output at the end of the request.
@@ -98,6 +99,10 @@ func (e *emitter) Emit(input interface{}) error {
 	case emitable.Image:
 		// TODO
 		return nil
+
+	case EndSession:
+		e.shouldEndSession = true
+		return nil
 	}
 	return errors.New("AlexaEmitter cannot handle " + reflect.TypeOf(input).String())
 }
@@ -108,7 +113,7 @@ func (e *emitter) Flush() error {
 	response := &responseBody{
 		Version: "1.0",
 		Response: &response{
-			ShouldEndSession: true,
+			ShouldEndSession: e.shouldEndSession,
 		},
 	}
 

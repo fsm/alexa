@@ -1,5 +1,11 @@
 package alexa
 
+const (
+	RequestTypeLaunch       = "LaunchRequest"
+	RequestTypeIntent       = "IntentRequest"
+	RequestTypeSessionEnded = "SessionEndedRequest"
+)
+
 // requestBody Object
 // https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#request-body-parameters
 type requestBody struct {
