@@ -8,6 +8,7 @@ import (
 	"io"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/fsm/emitable"
 )
@@ -36,7 +37,7 @@ func (e *emitter) Emit(input interface{}) error {
 
 	case string:
 		e.speechBuffer.WriteString("<s>")
-		e.speechBuffer.WriteString(v)
+		e.speechBuffer.WriteString(copyToSSML(v))
 		e.speechBuffer.WriteString("</s>")
 		e.hasSpeech = true
 		return nil
@@ -50,7 +51,7 @@ func (e *emitter) Emit(input interface{}) error {
 	case emitable.QuickReply:
 		// Write message
 		e.speechBuffer.WriteString("<p>")
-		e.speechBuffer.WriteString(v.Message)
+		e.speechBuffer.WriteString(copyToSSML(v.Message))
 		e.speechBuffer.WriteString("</p>")
 
 		// Options
@@ -105,6 +106,16 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 	}
 	return errors.New("AlexaEmitter cannot handle " + reflect.TypeOf(input).String())
+}
+
+// Converts punctuation to appropriate pauses
+func copyToSSML(copy string) string {
+	ssml := copy
+	ssml = strings.Replace(ssml, ".", ".<break time=\"150ms\"/>", -1)
+	ssml = strings.Replace(ssml, "?", "?<break time=\"150ms\"/>", -1)
+	ssml = strings.Replace(ssml, "!", "!<break time=\"150ms\"/>", -1)
+	ssml = strings.Replace(ssml, ",", ",<break time=\"50ms\"/>", -1)
+	return ssml
 }
 
 // Flush writes the expected Alexa response to the a.ResponseWriter.
