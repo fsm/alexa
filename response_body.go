@@ -52,7 +52,6 @@ type reprompt struct {
 // directive is an object nested within the Response Object
 // There are many possible directives, follow the links included in the description:
 // https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#response-object
-type directive struct {
-	Type string `json:"type"`
-	// TODO, implement specific directives
+type directive interface {
+	DirectiveType() string
 }

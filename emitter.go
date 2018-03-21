@@ -29,6 +29,7 @@ type emitter struct {
 	hasSpeech        bool
 	speechBuffer     bytes.Buffer
 	shouldEndSession bool
+	directives       []directive
 }
 
 // Emit prepares the data to be output at the end of the request.
@@ -98,7 +99,10 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.Image:
-		// TODO
+		bodyTemplate := bodyTemplate7{
+			BackgroundImageURL: v.URL,
+		}
+		e.directives = append(e.directives, bodyTemplate.asDirective())
 		return nil
 
 	case EndSession:
@@ -125,6 +129,7 @@ func (e *emitter) Flush() error {
 		Version: "1.0",
 		Response: &response{
 			ShouldEndSession: e.shouldEndSession,
+			Directives:       &e.directives,
 		},
 	}
 
