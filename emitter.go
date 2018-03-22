@@ -50,11 +50,6 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.QuickReply:
-		// Write message
-		e.speechBuffer.WriteString("<p>")
-		e.speechBuffer.WriteString(copyToSSML(v.Message))
-		e.speechBuffer.WriteString("</p>")
-
 		// Options
 		optionsBuffer := new(bytes.Buffer)
 		for i, reply := range v.Replies {
@@ -71,7 +66,7 @@ func (e *emitter) Emit(input interface{}) error {
 		}
 
 		// Determine format
-		format := "You can %v"
+		format := "You can say %v"
 		if v.RepliesFormat != "" {
 			format = v.RepliesFormat
 		}
