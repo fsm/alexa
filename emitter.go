@@ -37,9 +37,7 @@ func (e *emitter) Emit(input interface{}) error {
 	switch v := input.(type) {
 
 	case string:
-		e.speechBuffer.WriteString("<s>")
 		e.speechBuffer.WriteString(copyToSSML(v))
-		e.speechBuffer.WriteString("</s>")
 		e.hasSpeech = true
 		return nil
 
@@ -50,6 +48,10 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.QuickReply:
+		// Write message
+		e.speechBuffer.WriteString(copyToSSML(v.Message))
+		e.hasSpeech = true
+
 		// Options
 		optionsBuffer := new(bytes.Buffer)
 		for i, reply := range v.Replies {
@@ -72,9 +74,7 @@ func (e *emitter) Emit(input interface{}) error {
 		}
 
 		// Write out options
-		e.speechBuffer.WriteString("<p>")
-		e.speechBuffer.WriteString(fmt.Sprintf(format, optionsBuffer.String()))
-		e.speechBuffer.WriteString("</p>")
+		e.speechBuffer.WriteString(copyToSSML(fmt.Sprintf(format, optionsBuffer.String())))
 		return nil
 
 	case emitable.Typing:
@@ -107,14 +107,36 @@ func (e *emitter) Emit(input interface{}) error {
 	return errors.New("AlexaEmitter cannot handle " + reflect.TypeOf(input).String())
 }
 
-// Converts punctuation to appropriate pauses
+// Converts copy to an appropriate SSML paragraph that will be read out
+// by Alexa as naturally as possible.
+//
+// This function adds appropriate pauses to punctuation in the middle
+// of a paragraph tag, as Alexa doesn't seem to do this normally for
+// some strange reason.
 func copyToSSML(copy string) string {
+	// Trim last punctuation, as we don't want to add a pause,
+	// as the pause will be handled by the end of the <p></p> SSML tag.
+	trimmed := ""
 	ssml := copy
+	if strings.HasSuffix(copy, ".") {
+		trimmed = "."
+		ssml = strings.TrimSuffix(ssml, trimmed)
+	} else if strings.HasSuffix(copy, "!") {
+		trimmed = "!"
+		ssml = strings.TrimSuffix(ssml, trimmed)
+	} else if strings.HasSuffix(copy, "?") {
+		trimmed = "?"
+		ssml = strings.TrimSuffix(ssml, trimmed)
+	}
+
+	// Add pauses after punctuation
 	ssml = strings.Replace(ssml, ".", ".<break time=\"150ms\"/>", -1)
 	ssml = strings.Replace(ssml, "?", "?<break time=\"150ms\"/>", -1)
 	ssml = strings.Replace(ssml, "!", "!<break time=\"150ms\"/>", -1)
 	ssml = strings.Replace(ssml, ",", ",<break time=\"50ms\"/>", -1)
-	return ssml
+
+	// Join it all together and return
+	return "<s>" + ssml + trimmed + "</s>"
 }
 
 // Flush writes the expected Alexa response to the a.ResponseWriter.
