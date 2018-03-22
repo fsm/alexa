@@ -50,6 +50,7 @@ func (e *emitter) Emit(input interface{}) error {
 	case emitable.QuickReply:
 		// Write message
 		e.speechBuffer.WriteString(copyToSSML(v.Message))
+		e.hasSpeech = true
 
 		// Options
 		optionsBuffer := new(bytes.Buffer)
