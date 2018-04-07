@@ -40,7 +40,8 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 
 		// Prepare the emitter
 		emitter := &emitter{
-			ResponseWriter: w,
+			ResponseWriter:      w,
+			supportedInterfaces: cb.Context.System.Device.SupportedInterfaces,
 		}
 
 		// Handle request type
