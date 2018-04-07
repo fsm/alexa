@@ -25,11 +25,12 @@ import (
 //
 // https://developer.amazon.com/docs/custom-skills/speech-synthesis-markup-language-ssml-reference.html#ssml-supported
 type emitter struct {
-	ResponseWriter   io.Writer
-	hasSpeech        bool
-	speechBuffer     bytes.Buffer
-	shouldEndSession bool
-	directives       []directive
+	ResponseWriter      io.Writer
+	supportedInterfaces supportedInterfaces
+	hasSpeech           bool
+	speechBuffer        bytes.Buffer
+	shouldEndSession    bool
+	directives          []directive
 }
 
 // Emit prepares the data to be output at the end of the request.
@@ -94,10 +95,12 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.Image:
-		bodyTemplate := bodyTemplate7{
-			BackgroundImageURL: v.URL,
+		if e.supportedInterfaces.Display != nil {
+			bodyTemplate := bodyTemplate7{
+				BackgroundImageURL: v.URL,
+			}
+			e.directives = append(e.directives, bodyTemplate.asDirective())
 		}
-		e.directives = append(e.directives, bodyTemplate.asDirective())
 		return nil
 
 	case EndSession:

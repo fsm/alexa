@@ -70,8 +70,19 @@ type audioPlayer struct {
 }
 
 type supportedInterfaces struct {
-	AudioPlayer interface{} `json:"AudioPlayer,omitempty"`
+	AudioPlayer *audioPlayerInterface `json:"AudioPlayer,omitempty"`
+	Display     *displayInterface     `json:"Display,omitempty"`
+	VideoApp    *videoAppInterface    `json:"VideoApp,omitempty"`
 }
+
+type audioPlayerInterface struct{}
+
+type displayInterface struct {
+	TemplateVersion string `json:"templateVersion"`
+	MarkupVersion   string `json:"markupVersion"`
+}
+
+type videoAppInterface struct{}
 
 // A request object that provides the details of the user’s request. There are several different request types avilable, see:
 // Standard Requests: https://developer.amazon.com/docs/custom-skills/request-types-reference.html
