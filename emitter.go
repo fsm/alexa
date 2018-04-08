@@ -83,7 +83,18 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.Audio:
-		// TODO
+		directive := audioDirective{
+			Type:         "AudioPlayer.Play",
+			PlayBehavior: "REPLACE_ALL",
+			AudioItem: AudioItem{
+				Stream: Stream{
+					URL:                  v.URL,
+					Token:                v.URL,
+					OffsetInMilliseconds: 0,
+				},
+			},
+		}
+		e.directives = append(e.directives, directive)
 		return nil
 
 	case emitable.Video:
