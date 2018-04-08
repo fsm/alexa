@@ -83,7 +83,9 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.Audio:
-		// TODO
+		e.speechBuffer.WriteString("<audio src=\"")
+		e.speechBuffer.WriteString(v.URL)
+		e.speechBuffer.WriteString("\"/>")
 		return nil
 
 	case emitable.Video:
