@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/fsm/target-util"
 
 	"github.com/fsm/fsm"
+	skillserver "github.com/mikeflynn/go-alexa/skillserver"
 )
 
 const platform = "amazon-alexa"
@@ -24,6 +27,12 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 
 	// Return Handler
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Validate Request
+		if !skillserver.IsValidAlexaRequest(w, r) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		// Get body
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
@@ -35,6 +44,19 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// Validate Timestamp
+		if !validTimestamp(cb.Request.Timestamp) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Validate App ID
+		if cb.Session.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") &&
+			cb.Context.System.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -69,4 +91,12 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 			return
 		}
 	}
+}
+
+func validTimestamp(timestamp string) bool {
+	reqTimestamp, _ := time.Parse("2006-01-02T15:04:05Z", timestamp)
+	if time.Since(reqTimestamp) < time.Duration(150)*time.Second {
+		return true
+	}
+	return false
 }
