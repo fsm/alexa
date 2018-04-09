@@ -49,8 +49,6 @@ func (e *emitter) Emit(input interface{}) error {
 		return nil
 
 	case emitable.QuickReply:
-		// Write message
-		e.speechBuffer.WriteString(copyToSSML(v.Message))
 		e.hasSpeech = true
 
 		// Options
@@ -76,6 +74,9 @@ func (e *emitter) Emit(input interface{}) error {
 
 		// Write out options
 		e.speechBuffer.WriteString(copyToSSML(fmt.Sprintf(format, optionsBuffer.String())))
+
+		// Write message
+		e.speechBuffer.WriteString(copyToSSML(v.Message))
 		return nil
 
 	case emitable.Typing:
