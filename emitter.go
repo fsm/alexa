@@ -30,6 +30,7 @@ type emitter struct {
 	hasSpeech           bool
 	speechBuffer        bytes.Buffer
 	shouldEndSession    bool
+	card                *card
 	directives          []directive
 }
 
@@ -106,6 +107,18 @@ func (e *emitter) Emit(input interface{}) error {
 		}
 		return nil
 
+	case StandardCard:
+		e.card = &card{
+			Type:  "Standard",
+			Title: v.Title,
+			Text:  v.Text,
+			Image: cardImage{
+				SmallImageURL: v.ImageURL,
+				LargeImageURL: v.ImageURL,
+			},
+		}
+		return nil
+
 	case EndSession:
 		e.shouldEndSession = true
 		return nil
@@ -153,6 +166,7 @@ func (e *emitter) Flush() error {
 		Response: &response{
 			ShouldEndSession: e.shouldEndSession,
 			Directives:       &e.directives,
+			Card:             e.card,
 		},
 	}
 
