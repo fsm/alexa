@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/fsm/target-util"
 
 	"github.com/fsm/fsm"
-	skillserver "github.com/mikeflynn/go-alexa/skillserver"
 )
 
 const platform = "amazon-alexa"
@@ -27,11 +25,13 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 
 	// Return Handler
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Validate Request
-		if !skillserver.IsValidAlexaRequest(w, r) {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		/*
+			// Validate Request
+			if !skillserver.IsValidAlexaRequest(w, r) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		*/
 
 		// Get body
 		buf := new(bytes.Buffer)
@@ -47,18 +47,21 @@ func GetWebhook(stateMachine fsm.StateMachine, store fsm.Store, distillIntent Di
 			return
 		}
 
-		// Validate Timestamp
-		if !validTimestamp(cb.Request.Timestamp) {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		/*
+			// Validate Timestamp
+			if !validTimestamp(cb.Request.Timestamp) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
-		// Validate App ID
-		if cb.Session.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") &&
-			cb.Context.System.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+
+			// Validate App ID
+			if cb.Session.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") &&
+				cb.Context.System.Application.ApplicationID != os.Getenv("ALEXA_APP_ID") {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		*/
 
 		// Prepare the emitter
 		emitter := &emitter{
